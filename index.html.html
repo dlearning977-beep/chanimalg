@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOTELIERSCLUB - Job Portal</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .auth-section {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin: 50px auto;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin: 15px 0;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .card p {
+            color: #666;
+            margin: 5px 0;
+            line-height: 1.6;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .section-title {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .logout-btn {
+            float: right;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #e0e0e0;
+            border-color: #667eea;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .stats-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stats-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .auth-section {
+                padding: 20px;
+                margin: 20px auto;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1>🏨 HOTELIERSCLUB</h1>
+                <p>Premium Hospitality Job Portal</p>
+            </div>
+            <button id="logoutBtn" class="logout-btn hidden" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Authentication Section -->
+        <div id="authSection" class="auth-section">
+            <div id="loginForm">
+                <h2 style="margin-bottom: 30px; text-align: center; color: #667eea;">Welcome Back</h2>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+
+                <button onclick="login()" style="width: 100%; margin-top: 10px;">Sign In</button>
+
+                <p style="text-align: center; margin-top: 20px; color: #666;">
+                    Don't have an account? 
+                    <a href="#" onclick="showRegister()" style="color: #667eea; text-decoration: none; font-weight: 600;">Register here</a>
+                </p>
+            </div>
+
+            <div id="registerForm" class="hidden">
+                <h2 style="margin-bottom: 30px; text-align: center; color: #667eea;">Create Account</h2>
+
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Create a password (min 6 characters)">
+                </div>
+
+                <div class="form-group">
+                    <label>I am a</label>
+                    <select id="regRole">
+                        <option value="user">Job Seeker</option>
+                        <option value="employer">Employer / Hotel</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+
+                <button onclick="register()" style="width: 100%; margin-top: 10px;">Create Account</button>
+
+                <p style="text-align: center; margin-top: 20px; color: #666;">
+                    Already have an account? 
+                    <a href="#" onclick="showLogin()" style="color: #667eea; text-decoration: none; font-weight: 600;">Sign in here</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminDashboard" class="dashboard">
+            <h2 class="section-title">👨‍💼 Admin Dashboard</h2>
+
+            <div class="grid" style="margin-bottom: 30px;">
+                <div class="stats-card">
+                    <div>Pending Jobs</div>
+                    <div class="stats-number" id="pendingCount">0</div>
+                </div>
+                <div class="stats-card">
+                    <div>Approved Jobs</div>
+                    <div class="stats-number" id="approvedCount">0</div>
+                </div>
+                <div class="stats-card">
+                    <div>Total Users</div>
+                    <div class="stats-number" id="usersCount">0</div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchAdminTab('pending')">Pending Approvals</button>
+                <button class="tab-btn" onclick="switchAdminTab('all')">All Jobs</button>
+                <button class="tab-btn" onclick="switchAdminTab('cvs')">Uploaded CVs</button>
+            </div>
+
+            <div id="pendingJobsSection">
+                <h3 style="margin-bottom: 20px;">Jobs Pending Approval</h3>
+                <div id="pendingJobsList"></div>
+            </div>
+
+            <div id="allJobsSection" class="hidden">
+                <h3 style="margin-bottom: 20px;">All Jobs</h3>
+                <div id="allJobsList"></div>
+            </div>
+
+            <div id="cvsSection" class="hidden">
+                <h3 style="margin-bottom: 20px;">Candidate CVs</h3>
+                <div id="cvsList"></div>
+            </div>
+        </div>
+
+        <!-- Employer Dashboard -->
+        <div id="employerDashboard" class="dashboard">
+            <h2 class="section-title">🏢 Employer Dashboard</h2>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchEmployerTab('post')">Post New Job</button>
+                <button class="tab-btn" onclick="switchEmployerTab('myjobs')">My Jobs</button>
+            </div>
+
+            <div id="postJobSection">
+                <div class="card">
+                    <h3>Post a New Job</h3>
+
+                    <div class="form-group">
+                        <label>Company Name</label>
+                        <input type="text" id="companyName" placeholder="Enter company name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Position / Job Title</label>
+                        <input type="text" id="positionTitle" placeholder="e.g., Hotel Manager, Chef, Receptionist">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="jobLocation" placeholder="e.g., Colombo, Kandy, Galle">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="jobCategory">
+                            <option value="Management">Management</option>
+                            <option value="Food & Beverage">Food & Beverage</option>
+                            <option value="Housekeeping">Housekeeping</option>
+                            <option value="Front Office">Front Office</option>
+                            <option value="Kitchen">Kitchen</option>
+                            <option value="Maintenance">Maintenance</option>
+                            <option value="Spa & Wellness">Spa & Wellness</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Job Description PDF</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="jobPdf" accept=".pdf">
+                            <label for="jobPdf" class="file-input-label">📄 Choose PDF File</label>
+                        </div>
+                        <small style="color: #666;">Upload detailed job description (PDF format)</small>
+                    </div>
+
+                    <button onclick="postJob()" class="btn-success">Submit for Approval</button>
+                </div>
+            </div>
+
+            <div id="myJobsSection" class="hidden">
+                <h3 style="margin-bottom: 20px;">My Posted Jobs</h3>
+                <div id="myJobsList"></div>
+            </div>
+        </div>
+
+        <!-- User Dashboard -->
+        <div id="userDashboard" class="dashboard">
+            <h2 class="section-title">🔍 Find Your Dream Job</h2>
+
+            <div class="tabs">
+                <button class="tab-btn active" onclick="switchUserTab('jobs')">Available Jobs</button>
+                <button class="tab-btn" onclick="switchUserTab('cv')">My CV</button>
+            </div>
+
+            <div id="jobsSection">
+                <div style="margin-bottom: 20px;">
+                    <input type="text" id="searchJobs" placeholder="🔍 Search by position, company, or location..." 
+                           style="width: 100%; padding: 15px; font-size: 16px;" onkeyup="filterJobs()">
+                </div>
+                <div id="jobsList" class="grid"></div>
+            </div>
+
+            <div id="cvSection" class="hidden">
+                <div class="card">
+                    <h3>Upload Your CV</h3>
+                    <p style="margin-bottom: 20px;">Upload your CV to apply for jobs quickly</p>
+
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="cvFullName" placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="cvEmail" placeholder="Enter your email">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Your CV (PDF)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="cvFile" accept=".pdf">
+                            <label for="cvFile" class="file-input-label">📄 Upload CV</label>
+                        </div>
+                    </div>
+
+                    <button onclick="uploadCV()" class="btn-success">Upload CV</button>
+                </div>
+
+                <div id="myCvList" style="margin-top: 30px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // FIREBASE CONFIGURATION
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abcdef"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // ============================================
+        // AUTHENTICATION FUNCTIONS
+        // ============================================
+
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+        }
+
+        function showLogin() {
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+        }
+
+        function register() {
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+
+            if (!email || !password) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    return db.collection('users').doc(user.uid).set({
+                        email: email,
+                        role: role,
+                        createdAt: new Date()
+                    });
+                })
+                .then(() => {
+                    alert('Registration successful! Please sign in.');
+                    showLogin();
+                })
+                .catch((error) => {
+                    alert('Error: ' + error.message);
+                });
+        }
+
+        function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                alert('Please enter email and password');
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    checkRole(user.uid);
+                })
+                .catch((error) => {
+                    alert('Error: ' + error.message);
+                });
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                location.reload();
+            });
+        }
+
+        // ============================================
+        // ROLE-BASED DASHBOARD SWITCHING
+        // ============================================
+
+        function checkRole(uid) {
+            db.collection('users').doc(uid).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        const role = doc.data().role;
+                        showDashboard(role);
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error getting role:', error);
+                });
+        }
+
+        function showDashboard(role) {
+            // Hide auth section
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+
+            // Show appropriate dashboard
+            if (role === 'admin') {
+                document.getElementById('adminDashboard').style.display = 'block';
+                loadAdminData();
+            } else if (role === 'employer') {
+                document.getElementById('employerDashboard').style.display = 'block';
+                loadEmployerJobs();
+            } else if (role === 'user') {
+                document.getElementById('userDashboard').style.display = 'block';
+                loadJobs();
+            }
+        }
+
+        // ============================================
+        // ADMIN FUNCTIONS
+        // ============================================
+
+        function switchAdminTab(tab) {
+            // Update button states
+            document.querySelectorAll('#adminDashboard .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Show/hide sections
+            document.getElementById('pendingJobsSection').classList.add('hidden');
+            document.getElementById('allJobsSection').classList.add('hidden');
+            document.getElementById('cvsSection').classList.add('hidden');
+
+            if (tab === 'pending') {
+                document.getElementById('pendingJobsSection').classList.remove('hidden');
+                loadPendingJobs();
+            } else if (tab === 'all') {
+                document.getElementById('allJobsSection').classList.remove('hidden');
+                loadAllJobs();
+            } else if (tab === 'cvs') {
+                document.getElementById('cvsSection').classList.remove('hidden');
+                loadAllCVs();
+            }
+        }
+
+        function loadAdminData() {
+            loadPendingJobs();
+            updateStats();
+        }
+
+        function updateStats() {
+            // Count pending jobs
+            db.collection('jobs').where('status', '==', 'pending').get()
+                .then(snapshot => {
+                    document.getElementById('pendingCount').textContent = snapshot.size;
+                });
+
+            // Count approved jobs
+            db.collection('jobs').where('status', '==', 'approved').get()
+                .then(snapshot => {
+                    document.getElementById('approvedCount').textContent = snapshot.size;
+                });
+
+            // Count users
+            db.collection('users').get()
+                .then(snapshot => {
+                    document.getElementById('usersCount').textContent = snapshot.size;
+                });
+        }
+
+        function loadPendingJobs() {
+            db.collection('jobs')
+                .where('status', '==', 'pending')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    let html = '';
+
+                    if (snapshot.empty) {
+                        html = '<p style="text-align: center; color: #666; padding: 40px;">No pending jobs to approve</p>';
+                    } else {
+                        snapshot.forEach((doc) => {
+                            const job = doc.data();
+                            html += `
+                                <div class="card">
+                                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                                        <div>
+                                            <h3>${job.position}</h3>
+                                            <p><strong>Company:</strong> ${job.company}</p>
+                                            <p><strong>Location:</strong> ${job.location}</p>
+                                            <p><strong>Category:</strong> ${job.category}</p>
+                                            <span class="badge badge-pending">Pending</span>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 15px;">
+                                        <button onclick="viewJobPdf('${job.pdf}')" class="btn-secondary">View PDF</button>
+                                        <button onclick="approveJob('${doc.id}')" class="btn-success">✓ Approve</button>
+                                        <button onclick="rejectJob('${doc.id}')" class="btn-danger">✗ Reject</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('pendingJobsList').innerHTML = html;
+                });
+        }
+
+        function loadAllJobs() {
+            db.collection('jobs')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    let html = '';
+
+                    snapshot.forEach((doc) => {
+                        const job = doc.data();
+                        const badgeClass = job.status === 'approved' ? 'badge-approved' : 
+                                          job.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+
+                        html += `
+                            <div class="card">
+                                <h3>${job.position}</h3>
+                                <p><strong>Company:</strong> ${job.company}</p>
+                                <p><strong>Location:</strong> ${job.location}</p>
+                                <span class="badge ${badgeClass}">${job.status}</span>
+                                <div style="margin-top: 10px;">
+                                    <button onclick="viewJobPdf('${job.pdf}')" class="btn-secondary">View PDF</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById('allJobsList').innerHTML = html;
+                });
+        }
+
+        function loadAllCVs() {
+            db.collection('cvs')
+                .orderBy('uploadedAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    let html = '';
+
+                    if (snapshot.empty) {
+                        html = '<p style="text-align: center; color: #666; padding: 40px;">No CVs uploaded yet</p>';
+                    } else {
+                        snapshot.forEach((doc) => {
+                            const cv = doc.data();
+                            html += `
+                                <div class="card">
+                                    <h3>${cv.name}</h3>
+                                    <p><strong>Email:</strong> ${cv.email}</p>
+                                    <p><strong>Uploaded:</strong> ${cv.uploadedAt ? cv.uploadedAt.toDate().toLocaleDateString() : 'N/A'}</p>
+                                    <button onclick="window.open('${cv.file}')" class="btn-secondary">View CV</button>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('cvsList').innerHTML = html;
+                });
+        }
+
+        function approveJob(id) {
+            db.collection('jobs').doc(id).update({
+                status: 'approved',
+                approvedAt: new Date()
+            })
+            .then(() => {
+                alert('Job approved successfully!');
+                updateStats();
+            })
+            .catch((error) => {
+                alert('Error approving job: ' + error.message);
+            });
+        }
+
+        function rejectJob(id) {
+            db.collection('jobs').doc(id).update({
+                status: 'rejected',
+                rejectedAt: new Date()
+            })
+            .then(() => {
+                alert('Job rejected');
+                updateStats();
+            })
+            .catch((error) => {
+                alert('Error rejecting job: ' + error.message);
+            });
+        }
+
+        function viewJobPdf(url) {
+            if (url) {
+                window.open(url, '_blank');
+            } else {
+                alert('PDF not available');
+            }
+        }
+
+        // ============================================
+        // EMPLOYER FUNCTIONS
+        // ============================================
+
+        function switchEmployerTab(tab) {
+            document.querySelectorAll('#employerDashboard .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.getElementById('postJobSection').classList.add('hidden');
+            document.getElementById('myJobsSection').classList.add('hidden');
+
+            if (tab === 'post') {
+                document.getElementById('postJobSection').classList.remove('hidden');
+            } else {
+                document.getElementById('myJobsSection').classList.remove('hidden');
+                loadEmployerJobs();
+            }
+        }
+
+        async function postJob() {
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert('Please login first');
+                return;
+            }
+
+            const company = document.getElementById('companyName').value;
+            const position = document.getElementById('positionTitle').value;
+            const location = document.getElementById('jobLocation').value;
+            const category = document.getElementById('jobCategory').value;
+            const fileInput = document.getElementById('jobPdf');
+
+            if (!company || !position || !location) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            try {
+                let pdfUrl = '';
+
+                // Upload PDF if provided
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    const fileName = `jobs/${user.uid}_${Date.now()}_${file.name}`;
+                    const ref = storage.ref(fileName);
+                    await ref.put(file);
+                    pdfUrl = await ref.getDownloadURL();
+                }
+
+                // Save job to Firestore
+                await db.collection('jobs').add({
+                    company: company,
+                    position: position,
+                    location: location,
+                    category: category,
+                    pdf: pdfUrl,
+                    status: 'pending',
+                    createdBy: user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert('Job posted successfully! It will be visible after admin approval.');
+
+                // Clear form
+                document.getElementById('companyName').value = '';
+                document.getElementById('positionTitle').value = '';
+                document.getElementById('jobLocation').value = '';
+                fileInput.value = '';
+
+            } catch (error) {
+                alert('Error posting job: ' + error.message);
+            }
+        }
+
+        function loadEmployerJobs() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            db.collection('jobs')
+                .where('createdBy', '==', user.uid)
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    let html = '';
+
+                    if (snapshot.empty) {
+                        html = '<p style="text-align: center; color: #666; padding: 40px;">You haven't posted any jobs yet</p>';
+                    } else {
+                        snapshot.forEach((doc) => {
+                            const job = doc.data();
+                            const badgeClass = job.status === 'approved' ? 'badge-approved' : 
+                                              job.status === 'rejected' ? 'badge-rejected' : 'badge-pending';
+
+                            html += `
+                                <div class="card">
+                                    <h3>${job.position}</h3>
+                                    <p><strong>Location:</strong> ${job.location}</p>
+                                    <p><strong>Category:</strong> ${job.category}</p>
+                                    <span class="badge ${badgeClass}">${job.status}</span>
+                                    <div style="margin-top: 10px;">
+                                        ${job.pdf ? `<button onclick="viewJobPdf('${job.pdf}')" class="btn-secondary">View PDF</button>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('myJobsList').innerHTML = html;
+                });
+        }
+
+        // ============================================
+        // USER FUNCTIONS
+        // ============================================
+
+        function switchUserTab(tab) {
+            document.querySelectorAll('#userDashboard .tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.getElementById('jobsSection').classList.add('hidden');
+            document.getElementById('cvSection').classList.add('hidden');
+
+            if (tab === 'jobs') {
+                document.getElementById('jobsSection').classList.remove('hidden');
+                loadJobs();
+            } else {
+                document.getElementById('cvSection').classList.remove('hidden');
+                loadMyCVs();
+            }
+        }
+
+        function loadJobs() {
+            db.collection('jobs')
+                .where('status', '==', 'approved')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    let html = '';
+
+                    if (snapshot.empty) {
+                        html = '<p style="text-align: center; color: #666; padding: 40px;">No jobs available at the moment</p>';
+                    } else {
+                        snapshot.forEach((doc) => {
+                            const job = doc.data();
+                            html += `
+                                <div class="card" data-position="${job.position.toLowerCase()}" data-company="${job.company.toLowerCase()}" data-location="${job.location.toLowerCase()}">
+                                    <h3>${job.position}</h3>
+                                    <p><strong>🏢 Company:</strong> ${job.company}</p>
+                                    <p><strong>📍 Location:</strong> ${job.location}</p>
+                                    <p><strong>🏷️ Category:</strong> ${job.category}</p>
+                                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                                        ${job.pdf ? `
+                                            <button onclick="viewJobPdf('${job.pdf}')" class="btn-secondary">
+                                                📄 View Details
+                                            </button>
+                                        ` : ''}
+                                        <button onclick="applyViaWhatsApp('${job.company}', '${job.position}')" class="btn-success">
+                                            💬 Apply via WhatsApp
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('jobsList').innerHTML = html;
+                });
+        }
+
+        function filterJobs() {
+            const searchTerm = document.getElementById('searchJobs').value.toLowerCase();
+            const cards = document.querySelectorAll('#jobsList .card');
+
+            cards.forEach(card => {
+                const position = card.getAttribute('data-position');
+                const company = card.getAttribute('data-company');
+                const location = card.getAttribute('data-location');
+
+                if (position.includes(searchTerm) || company.includes(searchTerm) || location.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        function applyViaWhatsApp(company, position) {
+            const phone = '947XXXXXXXX'; // Replace with actual phone number
+            const message = `HOTELIERSCLUB Job Application
+
+Position: ${position}
+Company: ${company}
+
+Hello, I am interested in applying for the above position. Please find my details below.`;
+
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+
+        async function uploadCV() {
+            const user = auth.currentUser;
+
+            if (!user) {
+                alert('Please login first');
+                return;
+            }
+
+            const name = document.getElementById('cvFullName').value;
+            const email = document.getElementById('cvEmail').value;
+            const fileInput = document.getElementById('cvFile');
+
+            if (!name || !email || !fileInput.files || !fileInput.files[0]) {
+                alert('Please fill in all fields and select a file');
+                return;
+            }
+
+            try {
+                const file = fileInput.files[0];
+                const fileName = `cvs/${user.uid}_${Date.now()}_${file.name}`;
+                const ref = storage.ref(fileName);
+
+                await ref.put(file);
+                const url = await ref.getDownloadURL();
+
+                await db.collection('cvs').add({
+                    name: name,
+                    email: email,
+                    file: url,
+                    userId: user.uid,
+                    uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                alert('CV uploaded successfully!');
+
+                // Clear form
+                document.getElementById('cvFullName').value = '';
+                document.getElementById('cvEmail').value = '';
+                fileInput.value = '';
+
+                loadMyCVs();
+
+            } catch (error) {
+                alert('Error uploading CV: ' + error.message);
+            }
+        }
+
+        function loadMyCVs() {
+            const user = auth.currentUser;
+            if (!user) return;
+
+            db.collection('cvs')
+                .where('userId', '==', user.uid)
+                .orderBy('uploadedAt', 'desc')
+                .onSnapshot((snapshot) => {
+                    let html = '<h3 style="margin-bottom: 20px;">My Uploaded CVs</h3>';
+
+                    if (snapshot.empty) {
+                        html += '<p style="color: #666;">You haven't uploaded any CVs yet</p>';
+                    } else {
+                        snapshot.forEach((doc) => {
+                            const cv = doc.data();
+                            html += `
+                                <div class="card">
+                                    <h4>${cv.name}</h4>
+                                    <p>Email: ${cv.email}</p>
+                                    <p>Uploaded: ${cv.uploadedAt ? cv.uploadedAt.toDate().toLocaleString() : 'N/A'}</p>
+                                    <button onclick="window.open('${cv.file}')" class="btn-secondary">View CV</button>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('myCvList').innerHTML = html;
+                });
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                checkRole(user.uid);
+            }
+        });
+    </script>
+</body>
+</html>
